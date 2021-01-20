@@ -1,0 +1,1 @@
+SELECT * FROM users u WHERE id = $1;

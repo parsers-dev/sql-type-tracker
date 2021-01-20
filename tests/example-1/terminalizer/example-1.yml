@@ -1,0 +1,127 @@
+# The configurations that used for the recording, feel free to edit them
+config:
+
+  # Specify a command to be executed
+  # like `/bin/bash -l`, `ls`, or any other commands
+  # the default is bash for Linux
+  # or powershell.exe for Windows
+  command: zsh
+  
+  # Specify the current working directory path
+  # the default is the current working directory path
+  cwd: 
+  
+  # Export additional ENV variables
+  env:
+    recording: true
+  
+  # Explicitly set the number of columns
+  # or use `auto` to take the current
+  # number of columns of your shell
+  cols: 120
+  
+  # Explicitly set the number of rows
+  # or use `auto` to take the current
+  # number of rows of your shell
+  rows: 20
+  
+  # Amount of times to repeat GIF
+  # If value is -1, play once
+  # If value is 0, loop indefinitely
+  # If value is a positive number, loop n times
+  repeat: -1
+  
+  # Quality
+  # 1 - 100
+  quality: 50
+  
+  # Delay between frames in ms
+  # If the value is `auto` use the actual recording delays
+  frameDelay: auto
+  
+  # Maximum delay between frames in ms
+  # Ignored if the `frameDelay` isn't set to `auto`
+  # Set to `auto` to prevent limiting the max idle time
+  maxIdleTime: 2000
+  
+  # The surrounding frame box
+  # The `type` can be null, window, floating, or solid`
+  # To hide the title use the value null
+  # Don't forget to add a backgroundColor style with a null as type
+  frameBox:
+    type: solid
+    title: parsers.dev
+    style: []
+  
+  # Add a watermark image to the rendered gif
+  # You need to specify an absolute path for
+  # the image on your machine or a URL, and you can also
+  # add your own CSS styles
+  watermark:
+    imagePath: null
+    style:
+      position: absolute
+      right: 15px
+      bottom: 15px
+      width: 100px
+      opacity: 0.9
+  
+  # Cursor style can be one of
+  # `block`, `underline`, or `bar`
+  cursorStyle: block
+  
+  # Font family
+  # You can use any font that is installed on your machine
+  # in CSS-like syntax
+  # fontFamily: "Monaco, Lucida Console, Ubuntu Mono, Monospace"
+  fontFamily: "Meslo for Powerline, Meslo LG M for Powerline"
+  
+  # The size of the font
+  fontSize: 12
+  
+  # The height of lines
+  lineHeight: 1
+  
+  # The spacing between letters
+  letterSpacing: 0
+  
+  # Theme
+  theme:
+    background: "transparent"
+    foreground: "#afafaf"
+    cursor: "#c7c7c7"
+    black: "#232628"
+    red: "#ff3743"
+    green: "#00c072"
+    yellow: "#f4f700"
+    blue: "#75dff2"
+    magenta: "#ae89fe"
+    cyan: "#708387"
+    white: "#d5d5d0"
+    brightBlack: "#626566"
+    brightRed: "#ff3743"
+    brightGreen: "#00c072"
+    brightYellow: "#f4f700"
+    brightBlue: "#75dff2"
+    brightMagenta: "#ae89fe"
+    brightCyan: "#b1c6ca"
+    brightWhite: "#f9f9f4"
+  
+# Records, feel free to edit them
+records:
+  - delay: 10
+    content: "\e[?1034h$ "
+  - delay: 500
+    content: "npx @parsers.dev/sql-type-tracker --ddl=./tests/example-1/sql/ddl --dml=./tests/example-1/sql/dml --apikey=<parsers.dev api key>\r\n"
+  - delay: 1000
+    content: "\e[1m\r\n== PARSERS.DEV type check is starting ==\r\n\e[22m\r\n"
+  - delay: 50
+    content: "Current branch is '\e[1mdevelop\e[22m'\r\nGetting remote branch '\e[1mdevelop\e[22m' HEAD commit hash...\r\n"
+  - delay: 1000
+    content: "Remote branch '\e[1mdevelop\e[22m' hash is \e[1m9739eb6f232862a974da8b13acb6fb7377ed21c9\e[22m\r\n"
+  - delay: 500
+    content: "file '\e[1m1-all-users.sql\e[22m':\r\n\e[32m  [pass] previous version parsed succeeded\e[39m\r\n\e[32m  [pass] new version parsed succeeded\e[39m\r\n\e[1m\e[31m  [fail] rows count class mismatch:\e[39m\e[22m\e[1m MANY_OR_NONE\e[22m vs \e[1mONE_OR_NONE\e[22m\r\n\e[32m  [pass] fields count matched\e[39m\r\n\e[1m\tfield #0: \e[22m\e[32m[pass] column \"id\" INTEGER NOT NULL  (users.id)\e[39m\r\n\e[1m\tfield #1: \e[22m\e[32m[pass] column \"username\" TEXT   (users.username)\e[39m\r\n"
+  - delay: 10
+    content: "\e[1m\r\n== PARSERS.DEV type check finished ==\r\n\e[22m\r\n"
+  - delay: 10
+    content: "$ \r\n"

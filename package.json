@@ -1,0 +1,46 @@
+{
+  "name": "@parsers.dev/sql-type-tracker",
+  "version": "1.0.1",
+  "files": [
+    "src"
+  ],
+  "bin": {
+    "parsers-dev-sql-type-tracker": "./src/cli.js"
+  },
+  "main": "./src/index.js",
+  "author": {
+    "name": "Anton Revyako",
+    "email": "anton.revyako@gmail.com"
+  },
+  "engines": {
+    "node": ">=12.0"
+  },
+  "license": "ISC",
+  "description": "parsers.dev sql type tracker",
+  "keywords": [
+    "parsers.dev",
+    "sql",
+    "postgresql",
+    "type tracker",
+    "linter",
+    "analysis",
+    "static analysis"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/parsers-dev/sql-type-tracker.git"
+  },
+  "bugs": {
+    "url": "https://github.com/parsers-dev/sql-type-tracker/issues"
+  },
+  "homepage": "https://github.com/parsers-dev/sql-type-tracker#readme",
+  "preferGlobal": true,
+  "scripts": {
+    "pack": "npm version patch && npm publish"
+  },
+  "dependencies": {
+    "axios": "^0.21.1",
+    "colors": "^1.4.0",
+    "yargs": "^16.2.0"
+  }
+}
