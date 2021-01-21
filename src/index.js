@@ -1,4 +1,5 @@
 const fs = require('fs').promises;
+const fsSync = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
 const colors = require('colors');
@@ -34,6 +35,7 @@ const callApi = async (apikey, db, data) => {
   return response;
 }
 
+// SO ;)
 const spawnChild = async (command, argvArr, stdin) => {
   const child = spawn(command, argvArr);
 
@@ -71,10 +73,32 @@ const getRemoteHeadCommit = async (currentBranchName) => {
   ;
 }
 
+// SO ;)
+const readdirRecursive = (dirPath, arrayOfFiles) =>  {
+  files = fsSync.readdirSync(dirPath)
+
+  arrayOfFiles = arrayOfFiles || []
+
+  files.forEach(function(file) {
+    if (fsSync.statSync(dirPath + "/" + file).isDirectory()) {
+      arrayOfFiles = readdirRecursive(dirPath + "/" + file, arrayOfFiles)
+    } else {
+      arrayOfFiles.push(path.join(dirPath, "/", file))
+    }
+  })
+
+  return arrayOfFiles
+}
+;
+
 const getChanges = async (localpath, isDirectory, remoteBranchHash) => {
+  
   let remoteFilesHash = [];
-  let localFilesHash = [];
   let remoteFilesHashFiltered = [];
+
+  let localFiles = [];
+  let localFilesHash = [];
+
   const deleted = [];
 
   // get remote branch files hash for DDL path
@@ -86,6 +110,7 @@ const getChanges = async (localpath, isDirectory, remoteBranchHash) => {
       .map(hf => ({file: hf[1], hash: hf[0].split(' ')[2]}))
       .filter(hf => path.extname(hf.file).toLowerCase() === '.sql')
       .filter(hf => isDirectory || !isDirectory && path.join(path.dirname(localpath), hf.file) === path.join(localpath))
+      .map(fh => ({file: fh.file, hash: fh.hash.trim()}))
     ;
   }catch(error){
     if(error.message.trim().slice(0,31) === 'fatal: Not a valid object name '){
@@ -108,6 +133,7 @@ const getChanges = async (localpath, isDirectory, remoteBranchHash) => {
       .map(r => r.status === 'fulfilled')
     ;
 
+    // TODO: .reduce
     remoteFilesHashFiltered = remoteFilesHash.filter((fh, id) => {
       if(!stats[id]){
         console.log(`File '${path.join(path.dirname(localpath), fh.file)}' was deleted locally!`);
@@ -120,27 +146,36 @@ const getChanges = async (localpath, isDirectory, remoteBranchHash) => {
       console.error('ALL locally files was deleted!'.red.bold);
       process.exit(1);
     }
-
-    localFilesHash = (await spawnChild('git', ['hash-object', '--stdin-path'],
-      remoteFilesHashFiltered.map(fh =>
-        isDirectory 
-          ? path.join(localpath, fh.file)
-          : path.resolve(path.dirname(localpath), fh.file)).join('\n')
-    )).split('\n');
-    
-    if(localFilesHash.length === 0){
-      throw new Error('Local branch files hash can\'t be collected');
-    }
   }catch(error){
     console.error(error.message);
     process.exit(1);
   }
 
-  const changed = remoteFilesHashFiltered.filter((fh, id) => localFilesHash[id] != null && fh.hash !== localFilesHash[id].trim());
 
+  localFiles = isDirectory 
+    ? readdirRecursive(localpath).map(f => path.relative(localpath, f))
+    : [path.parse(localpath).base]
+  ;
+
+  localFilesHash = (await spawnChild('git', ['hash-object', '--stdin-path'],
+    localFiles.map(f =>path.join(localpath, f)).join('\n')
+  ))
+    .split('\n')
+    .map((h, id) => ({file: localFiles[id], hash: h}))
+    .filter(fh => fh.hash !== '')
+  ;
+
+  if(localFilesHash.length === 0){
+    throw new Error('Local branch files hash can\'t be collected');
+  }
+  
+  const changedFiles = remoteFilesHashFiltered.filter((fh, id) => localFilesHash.find(lfh => lfh.hash === fh.hash &&  fh.file === lfh.file) == null);
+  const newFiles = localFilesHash.filter(lfh => remoteFilesHashFiltered.find(fh => fh.file === lfh.file) == null);
+  
   return {
-    all: remoteFilesHashFiltered,
-    changed,
+    remote: remoteFilesHashFiltered,
+    changed: changedFiles,
+    new: newFiles, 
     deleted
   }
 }
@@ -312,18 +347,18 @@ const check = async (params) => {
   const ddlFiles = await getChanges(params.ddl, ddlPathIsDirectory, remoteBranchHash);
   const dmlFiles = await getChanges(params.dml, dmlPathIsDirectory, remoteBranchHash);
 
-  if(ddlFiles.all.length === 0){
+  if(ddlFiles.remote.length === 0){
     console.log('No DDL files was found'.yellow.bold);
     process.exit(0);
   }
 
-  if(dmlFiles.changed.length === 0 && ddlFiles.changed.length === 0){
+  if(dmlFiles.changed.length === 0 && ddlFiles.changed.length === 0 && ddlFiles.new.length === 0){
     console.log('No need to refresh DML types'.yellow.bold);
     process.exit(0);
   }
   
-  if(ddlFiles.deleted.length > 0 || ddlFiles.changed.length > 0){
-    const ddlsOld = (await Promise.allSettled(ddlFiles.all.map(fh =>  spawnChild('git', ['cat-file', 'blob', fh.hash]))))
+  if(ddlFiles.deleted.length > 0 || ddlFiles.changed.length > 0 || ddlFiles.new.length > 0){
+    const ddlsOld = (await Promise.allSettled(ddlFiles.remote.map(fh =>  spawnChild('git', ['cat-file', 'blob', fh.hash]))))
       .map(p => p.status === 'fulfilled' ? p.value.toString() : null);
 
     if(ddlsOld.includes(null)){
@@ -331,7 +366,7 @@ const check = async (params) => {
       process.exit(1);
     }
     
-    const dmlsOld = (await Promise.allSettled(dmlFiles.all.map(fh => 
+    const dmlsOld = (await Promise.allSettled(dmlFiles.remote.map(fh => 
         spawnChild('git', ['cat-file', 'blob', fh.hash])
       )))
       .map(p => p.status === 'fulfilled' ? p.value.toString() : null);
@@ -341,7 +376,7 @@ const check = async (params) => {
       process.exit(1);
     }
 
-    const ddlsNew = (await Promise.allSettled(ddlFiles.all.map(fh =>  fs.readFile(
+    const ddlsNew = (await Promise.allSettled(ddlFiles.remote.map(fh =>  fs.readFile(
       ddlPathIsDirectory 
         ? path.resolve(params.ddl, fh.file)
         : path.resolve(params.ddl)
@@ -353,7 +388,7 @@ const check = async (params) => {
       // process.exit(1);
     }
     
-    const dmlsNew = (await Promise.allSettled(dmlFiles.all.map(fh => fs.readFile(
+    const dmlsNew = (await Promise.allSettled(dmlFiles.remote.map(fh => fs.readFile(
         dmlPathIsDirectory 
           ? path.resolve(params.dml, fh.file)
           : path.resolve(params.dml),
@@ -371,14 +406,14 @@ const check = async (params) => {
 
     const dmlPairs = responseOldVersion.data.data.compiled.dmls.map((o, id) => ({old: o[0], new: responseNewVersion.data.data.compiled.dmls[id][0] }));
 
-    exitCode = assertPairs(dmlPairs, dmlFiles.all);
+    exitCode = assertPairs(dmlPairs, dmlFiles.remote);
   }else{
     if(dmlFiles.changed.length > 0){
       // unchanged ddl, changed dmls
-      console.log(`Need to refresh types for ${dmlFiles.changed.length.toString().yellow.bold} of ${dmlFiles.all.length.toString().green.bold}` + ` DMLs`.bold + ` with ${ddlFiles.deleted.length > 0 
+      console.log(`Need to refresh types for ${dmlFiles.changed.length.toString().yellow.bold} of ${dmlFiles.remote.length.toString().green.bold}` + ` DMLs`.bold + ` with ${ddlFiles.deleted.length > 0 
           || ddlFiles.changed.length > 0 ? 'CHANGED'.green.bold : 'UNCHANGED'.green.bold}` +` DDL`.bold);
   
-      const ddls = (await Promise.allSettled(ddlFiles.all.map(fh => fs.readFile(
+      const ddls = (await Promise.allSettled(ddlFiles.remote.map(fh => fs.readFile(
           ddlPathIsDirectory 
             ? path.resolve(params.ddl, fh.file)
             : path.resolve(params.ddl)
