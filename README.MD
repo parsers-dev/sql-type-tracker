@@ -125,7 +125,7 @@ WHAT?! WHY?! Why is everything ok?
 These are two identical queries. Literally. Same source, same meanings. **And now you can trace this!**
 
 # HOW IT WORKS
-All this magic makes by our SaaS named **[parsers.dev](https://parsers.dev)**. Yes, this is online tool and you need to register (it is free).
+All this magic made by our SaaS named **[parsers.dev](https://parsers.dev)**. Yes, this is online tool and you need to register (it is free).
 We take all database schema definition and 
 
 
