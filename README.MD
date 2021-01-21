@@ -126,7 +126,10 @@ These are two identical queries. Literally. Same source, same meanings. **And no
 
 # HOW IT WORKS
 All this magic made by our SaaS named **[parsers.dev](https://parsers.dev)**. Yes, this is online tool and you need to register (it is free).
-We take all database schema definition and 
+We take all database schema definition and queries, parse and compile it to an intermediate representation object to grab many insights from them.
+We don't need to connect to a real database. Everything happened without it. Static methods only!
+
+And then, when we compile two IR-objects of the current and previous state, we can compare them! That's all 😀
 
 
 
