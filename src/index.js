@@ -5,6 +5,8 @@ const { spawn } = require('child_process');
 const colors = require('colors');
 const axios = require ('axios');
 
+const version = require('../package.json').version;
+
 const API_URL = 'https://api.parsers.dev/api/v1';
 
 const DB_SUPPORTED = ['postgresql'];
@@ -16,6 +18,7 @@ const callApi = async (apikey, db, data) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'User-Agent': `parsers-dev-sql-type-tracker/${version}`,
         'x-api-key': apikey,
       },
       data,
